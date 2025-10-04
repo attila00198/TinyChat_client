@@ -5,6 +5,7 @@ This repository is the frontend for the TerminalChat project. TerminalChat is sp
 What this repo contains
 - A minimal static web client (HTML/CSS/JS) that connects to a WebSocket server and provides a chat interface.
 - No backend/server code is included here — run the matching server (separate repo) to provide the WebSocket endpoint.
+- The recommanded backend located at (Not published yet.)
 
 Quick start
 
