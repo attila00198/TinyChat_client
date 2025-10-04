@@ -2,66 +2,21 @@
 ////      Variables        ////
 ///////////////////////////////
 
-let reconnectAttempts = 0;
+// Constants
 const RECONNECT_DELAY = 3000; // 3 másodperc
 const MAX_RECONNECT_ATTEMPTS = 3;
 
 const HOST = "localhost"
 const PORT = 8765
 
-const COMMANDS = {
-    "/whisper": {
-        usage: "/whisper [cél_user] [üzenet]",
-        handler: (args, timestamp) => {
-            if (args.length < 2) {
-                return systemMessage(`Használat: ${COMMANDS["/whisper"].usage}`)
-            }
-            return {
-                type: "private",
-                from: current_user.username,
-                to: args[0],
-                content: args.slice(1).join(" "),
-                timestamp: getCurrentTime()
-            }
-        }
-    },
-    "/login": {
-        usage: "/login [jelszó]",
-        handler: (args, timestamp) => {
-            if (args.length < 1) {
-                return systemMessage(`Használat: ${COMMANDS["/login"].usage}`)
-            }
-            return {
-                type: "command",
-                username: current_user.username,
-                content: `/login ${args[0]}`,
-                timestamp: new Date(timestamp).toLocaleTimeString()
-            }
-        }
-    },
-    "/to": {
-        usage: "/to [cél_user] [idő]",
-        handler: (args, timestamp) => {
-            if (args.length < 2) {
-                return systemMessage(`Használat: ${COMMANDS["/to"].usage}`)
-            }
-            if (args[0] === current_user.username) {
-                return systemMessage("Saját magad nem némíthatod.")
-            }
-            return {
-                type: "command",
-                username: current_user.username,
-                content: `/to ${args[0]} ${args[1]}`,
-                timestamp: new Date(timestamp).toLocaleTimeString()
-            }
-        }
-    }
-}
+const COMMANDS = {}
 
 // State variables
 var ws = null;
 var is_connected = false
 var is_sidebar_closed = false
+
+var reconnectAttempts = 0;
 
 var current_user = loadUserFromCookie() || {}
 var currentUsername = current_user.username || ''
@@ -235,7 +190,7 @@ function messageItem(message) {
 
 function loginPanel() {
     return div(
-        h2("Terminal Chat"),
+        h2("Tiny Chat"),
         form(
             div(
                 input("text")
@@ -282,7 +237,7 @@ function rightPanel() {
                 .setClass("toggle-btn")
                 .onClick(toggleSidebar),
             span(`Felhasználónév: ${current_user.username} ${current_user.is_mod ? 'Rang: [MOD]' : ''}`).setId("right-panel-heading"),
-            btn("Kapcsolat bontása", "button").onClick(disconnect)
+            //btn("Kapcsolat bontása", "button").onClick(disconnect)
         ).setClass("right-panel-header"),
         chatInterface()
     ).setId("right-panel")
@@ -385,7 +340,7 @@ function updateLeftPanel(newUserList) {
         return
     }
 
-    users = newUserList
+    users = newUserList || []
 
     // Teljes left panel újrarenderelése
     replaceHTML(leftPanel, div(
@@ -394,6 +349,11 @@ function updateLeftPanel(newUserList) {
     ))
 
     leftPanel.setClass(`${is_sidebar_closed ? "hidden" : ""}`)
+}
+
+function updateStatusIndicator() {
+    is_connected = false
+    replaceHTML(statusIndicator(), statusIndicator())
 }
 
 function updateCurrentUser() {
@@ -445,12 +405,12 @@ function connect() {
 
     ws.onmessage = function (event) {
         const data = JSON.parse(event.data);
-        console.log("[DEBUG]: Fogadott típus: ", data.type)
-        console.log("[DEBUG]: Fogadott Üzenet: ", data.content)
 
         if (data.type === 'user_list') {
             updateLeftPanel(data.content);
             updateCurrentUser()
+        } else if (data.type === "command_list") {
+            console.warn("Not implemented.")
         } else {
             addMessage(data);
         }
@@ -464,6 +424,8 @@ function connect() {
             content: 'Kapcsolat megszakadt',
             timestamp: getCurrentTime()
         })
+        users = []
+        updateLeftPanel()
         disconnect()
     }
 
