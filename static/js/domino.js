@@ -44,7 +44,12 @@ function tag(name, ...children) {
     }
 
     node.setCss = function (style) {
-        this.style = style
+        // Accept either a css text string or an object map of CSS properties
+        if (typeof style === 'string') {
+            this.style.cssText = style
+        } else if (typeof style === 'object' && style !== null) {
+            Object.assign(this.style, style)
+        }
         return this
     }
 
@@ -59,7 +64,7 @@ function tag(name, ...children) {
     }
 
     node.isDisabled = function () {
-        this.setAttr({ disabled: true })
+        this.disabled = true
         return this
     }
 
@@ -159,14 +164,6 @@ function a(label, url, target = "") {
     return node
 }
 
-function ul(...children) {
-    return tag("ul", ...children)
-}
-
-function li(...children) {
-    return tag("li", ...children)
-}
-
 function nav(...children) {
     return tag("nav", ...children)
 }
@@ -234,11 +231,11 @@ function input(type = "text") {
 function textarea() {
     let node = tag("textarea")
 
-    node.setPlaceholder = function (placeholder) { this.attr({ placeholder }); return this }
+    node.setPlaceholder = function (placeholder) { this.setAttr({ placeholder }); return this }
     node.setValue = function (value) { this.value = value; return this }
-    node.setName = function (name) { this.attr({ name }); return this }
+    node.setName = function (name) { this.setAttr({ name }); return this }
     node.isDisabled = function (disabled = true) { this.disabled = disabled; return this }
-    node.isRequired = function (required = true) { this.attr({ required }); return this }
+    node.isRequired = function (required = true) { if (required) this.setAttr({ required: true }); return this }
 
     return node
 }
@@ -246,26 +243,25 @@ function textarea() {
 function select(...children) {
     let node = tag("select", ...children)
 
-    node.setName = function (name) { this.attr({ name }); return this; }
+    node.setName = function (name) { this.setAttr({ name }); return this; }
     node.setValue = function (value) { this.value = value; return this; }
     node.onChange = function (callback) { this.addEventListener("change", callback); return this }
     node.isDisabled = function (disabled = true) { this.disabled = disabled; return this }
-    node.isRequired = function (required = true) { this.attr({ required }); return this }
+    node.isRequired = function (required = true) { if (required) this.setAttr({ required: true }); return this }
 
     return node
 }
 
 function option(label, value, isSelected = false) {
-    let node = tag("option", label)
-        .setAttr({ value, isSelected })
-
+    let node = tag("option", label).setAttr({ value })
+    if (isSelected) node.selected = true
     return node;
 }
 
 function label(...children) {
     let node = tag("label", ...children);
 
-    node.setTarget = function (targetId) { this.attr({ for: targetId }); return this }
+    node.setTarget = function (targetId) { this.setAttr({ for: targetId }); return this }
 
     return node;
 }
@@ -301,6 +297,18 @@ function th(...children) {
 }
 
 // ========== Utilities ============
+
+// Export a tidy API object to window for easier consumption
+if (typeof window !== 'undefined') {
+    window.domino = {
+        tag, div, span, p, btn, input, textarea, form, select, option,
+        ul, ol, li, img, a, header, main, footer, h1, h2, h3, h4, h5, h6,
+        table, thead, tbody, tr, td, th, caption,
+        clearHTML, replaceHTML, replaceText,
+        getById, getByClass, getByTag,
+        basicRouter
+    }
+}
 
 // Sipler query selectors
 function getById(id) {
