@@ -1,0 +1,280 @@
+/* ========== BASE STYLES ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #181818;
+    --bg-secondary: #1f1f1f;
+    --bg-tertiary: #2a2a2a;
+    --bg-hover: #333333;
+    --bg-input: #555;
+    --border-primary: #ffffff;
+    --border-secondary: #444444;
+    --border-tertiary: #888;
+    --color-accent: cyan;
+    --color-accent-alt: aqua;
+    --font-main: 'Courier New', monospace;
+    --panel-width: 250px;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-primary);
+    color: var(--color-accent);
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14pt;
+}
+
+/* ========== LAYOUT ========== */
+.container {
+    display: flex;
+    height: 100vh;
+    border: 1px solid var(--border-primary);
+}
+
+/* ========== LEFT PANEL ========== */
+#left-panel {
+    width: var(--panel-width);
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-secondary);
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-speed) ease;
+}
+
+#left-panel.hidden {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    border-right: none;
+}
+
+.left-panel-header {
+    height: 50px;
+    padding: 10px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-secondary);
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ========== USER LIST ========== */
+.user-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.user-item {
+    padding: 8px;
+    margin: 2px 0;
+    background-color: var(--bg-tertiary);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all var(--transition-speed);
+    font-size: 14px;
+}
+
+.user-item:hover {
+    background-color: var(--bg-hover);
+    border-left-color: var(--color-accent);
+}
+
+/* ========== RIGHT PANEL ========== */
+#right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    min-width: 0;
+}
+
+.right-panel-header {
+    padding: 10px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-secondary);
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    /* NE zsugorodjon */
+}
+
+/* ========== CHAT INTERFACE ========== */
+#chat_interface {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Kitölti a rendelkezésre álló helyet */
+    min-height: 0;
+    /* KRITIKUS! Lehetővé teszi a flex item zsugorodását */
+}
+
+#message-list {
+    flex: 1;
+    /* Elfoglalja a maradék helyet */
+    overflow-y: auto;
+    /* Görgethető */
+    padding: 10px;
+    min-height: 0;
+    /* KRITIKUS! Lehetővé teszi a flex item zsugorodását */
+}
+
+#chat-form {
+    padding: 5px;
+    display: flex;
+    flex-shrink: 0;
+    /* NE zsugorodjon */
+    border-top: 1px solid var(--border-tertiary);
+}
+
+#chat-input {
+    flex: 1;
+    padding: 5px;
+    font-size: 20pt;
+    color: var(--color-accent-alt);
+    background-color: transparent;
+    border: 1px solid var(--border-tertiary);
+    border-radius: 5px;
+}
+
+/* ========== BUTTONS ========== */
+.join-btn,
+#reconnect-btn,
+.toggle-btn,
+#send-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border-tertiary);
+    color: var(--color-accent);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px 15px;
+    border-radius: 5px;
+    transition: all var(--transition-speed);
+    font-family: var(--font-main);
+}
+
+.join-btn:hover,
+#reconnect-btn:hover,
+.toggle-btn:hover,
+#send-btn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--color-accent);
+}
+
+#send-btn {
+    margin-left: 5px;
+    font-size: 20pt;
+}
+
+/* ========== Login Panel ========== */
+.login-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #1f1f1f;
+    border: 1px solid #ffffff;
+    padding: 30px;
+    z-index: 1000;
+    border-radius: 5px;
+    min-width: 300px;
+}
+
+.login-panel h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+}
+
+.name-input {
+    flex: 1;
+    padding: 5px;
+    font-size: 20pt;
+    color: var(--color-accent-alt);
+    background-color: transparent;
+    border: 1px solid var(--border-tertiary);
+    border-radius: 5px;
+}
+
+/* ========== Status Indicators ====== */
+
+.left-panel-header:has(.online) {
+    background-color: #00ff0050;
+}
+
+.left-panel-header:has(.offline) {
+    background-color: #ff000050;
+}
+
+/* ========== MESSAGE ITEMS ========== */
+
+/* Általános üzenet stílus */
+.message-item {
+    padding: 5px 10px;
+    margin: 5px 0;
+    word-wrap: break-word;
+    border-left: 3px solid transparent;
+}
+
+/* SYSTEM üzenetek - szürke/fehér, középre igazított */
+.msg-system {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+}
+
+.message-item:has(.msg-system) {
+    border-left-color: #444;
+}
+
+/* PUBLIC üzenetek - alapértelmezett cyan */
+.msg-public {
+    color: var(--color-accent);
+}
+
+.message-item:has(.msg-public) {
+    border-left-color: transparent;
+    border-left: 3px solid var(--color-accent);
+}
+
+/* PRIVATE üzenetek - lila/magenta, kiemelve */
+.msg-private {
+    color: #ff00ff;
+    /* magenta */
+    background-color: rgba(255, 0, 255, 0.1);
+}
+
+.message-item:has(.msg-private) {
+    border-left-color: #ff00ff;
+}
+
+/* COMMAND üzenetek - sárga/narancs, fontos */
+.msg-command {
+    color: #ffa500;
+    /* narancs */
+    font-weight: bold;
+}
+
+.message-item:has(.msg-command) {
+    border-left-color: #ffa500;
+    background-color: rgba(255, 165, 0, 0.1);
+}
+
+.hidden {
+    display: none;
+}
