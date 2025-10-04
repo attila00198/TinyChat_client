@@ -1,22 +1,4 @@
 ///////////////////////////////
-////        TODO           ////
-///////////////////////////////
-
-// [X] TODO: change all text on the page to hungarian.
-// [X] TODO: make the sidebar toggler button change to indicate the sidebar's position.
-// [X] TODO: make the sidebar retain its position regardless of the user list changes.
-// [X] TODO: make an indicator that shows the state of connecton. (connected, disconnected, reconnecting.)
-// [X] TODO: make the refresh button disappear when client connected to the server.
-// [ ] TODO: Implement updateStatusIndicator()
-// [ ] TODO: Implement updateUserList()
-// [ ] TODO: Iplement leaveServer() and make a visible button when connected to the server
-// [ ] TODO: Implement auto reconnect if connection is lost
-// [ ] TODO: Move command handling to server side
-// [ ] TODO: Update command list when the server sands a message with 'type:command_list'.
-// [ ] TODO: Create a '/help' command on clients side that lists all the available commands.
-// [ ] TODO: Implement autosuggestion when user types '/'.
-
-///////////////////////////////
 ////      Variables        ////
 ///////////////////////////////
 
