@@ -304,26 +304,47 @@ function sendMessage(e) {
     let content = chat_input.value
     let message_to_send = {}
 
+    if (!is_connected) {
+        message_to_add = {
+            type: "error",
+            username: "ERROR",
+            content: "Üzenet küldése sikertelen, nincs kapolat a szerverrel.",
+            timestamp: getCurrentTime()
+        }
+        addMessage(message_to_add)
+    }
+
     if (!content) return;
+    if (current_user.is_timed_out) {
+        message_to_add = {
+            type: "error",
+            username: "ERROR",
+            content: "Nem küldhetsz üzenetet mert mémítva vagy.",
+            timestamp: getCurrentTime()
+
+        }
+        addMessage(message_to_add)
+        chat_input.value = ""
+        return
+    }
 
     if (content.startsWith("/")) {
-        if (!current_user.is_timed_out) {
-            message_to_send = handleCommands(content, timestamp)
-        }
+        message_to_send = handleCommands(content, timestamp)
     } else {
-        if (!current_user.is_timed_out) {
-            message_to_send = {
-                type: "message",
-                content: content,
-                username: current_user.username,
-                timestamp: getCurrentTime()
-            }
-            addMessage(message_to_send)
+        message_to_send = {
+            type: "message",
+            content: content,
+            username: current_user.username,
+            timestamp: getCurrentTime()
         }
     }
-    console.log("To send: ", message_to_send)
+
+    console.log("[DEBUG]: To send: ", message_to_send)
     chat_input.value = ""
-    if (message_to_send !== null) sendToServer(message_to_send)
+    if (message_to_send !== null && is_connected) {
+        addMessage(message_to_send)
+        sendToServer(message_to_send)
+    }
 }
 
 function addMessage(message_to_add) {
@@ -398,7 +419,6 @@ function connect() {
         sendToServer({
             type: 'join',
             username: username,
-            content: 'Csatlakozott',
             timestamp: getCurrentTime()
         });
     };
@@ -419,8 +439,8 @@ function connect() {
     ws.onclose = function () {
         is_connected = false
         addMessage({
-            type: 'system',
-            username: 'System',
+            type: 'error',
+            username: 'Error',
             content: 'Kapcsolat megszakadt',
             timestamp: getCurrentTime()
         })

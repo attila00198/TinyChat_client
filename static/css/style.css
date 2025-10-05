@@ -233,13 +233,13 @@ body {
 
 /* SYSTEM üzenetek - szürke/fehér, középre igazított */
 .msg-system {
-    color: #888;
+    color: #33ff00;
     font-style: italic;
     text-align: center;
 }
 
 .message-item:has(.msg-system) {
-    border-left-color: #444;
+    border-left-color: #33ff00;
 }
 
 /* PUBLIC üzenetek - alapértelmezett cyan */
@@ -272,7 +272,17 @@ body {
 
 .message-item:has(.msg-command) {
     border-left-color: #ffa500;
-    background-color: rgba(255, 165, 0, 0.1);
+}
+
+/* ERROR üzenetek */
+.msg-error {
+    color: #ff0040;
+    /* narancs */
+    font-weight: bold;
+}
+
+.message-item:has(.msg-error) {
+    border-left-color: #ff0040;
 }
 
 .hidden {
