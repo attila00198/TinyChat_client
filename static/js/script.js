@@ -137,6 +137,7 @@ function formatMessage(message) {
     const badge = is_mod ? "[MOD]" : "";
 
     if (username === currentUsername) username = "Te"
+    if (from === currentUsername) from = "Te"
     if (type === "private") {
         return `[${timestamp}] ${from} ${badge} -> ${to}: ${content}`;
     } else {
