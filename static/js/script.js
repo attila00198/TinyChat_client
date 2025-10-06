@@ -9,8 +9,6 @@ const MAX_RECONNECT_ATTEMPTS = 3;
 const HOST = "localhost"
 const PORT = 8765
 
-const COMMANDS = {}
-
 // State variables
 var ws = null;
 var is_connected = false
@@ -21,6 +19,7 @@ var reconnectAttempts = 0;
 var current_user = loadUserFromCookie() || {}
 var currentUsername = current_user.username || ''
 var users = []
+var commands = []
 
 
 
@@ -177,14 +176,8 @@ function userList() {
 }
 
 function messageItem(message) {
-    let type = ""
-    if (message.type === "message") {
-        type = "public"
-    } else {
-        type = message.type
-    }
     return div(
-        span(formatMessage(message)).setClass(`msg-${type}`)
+        span(formatMessage(message)).setClass(`msg-${message.type}`)
     ).setClass("message-item");
 }
 
@@ -287,18 +280,17 @@ function joinChat(e) {
 }
 
 
-function handleCommands(messageText, timestamp) {
+function handleCommands(messageText) {
     return {
         type: "command",
         username: currentUsername,
         content: messageText,
-        timestamp: timestamp
+        timestamp: getCurrentTime()
     }
 }
 
 function sendMessage(e) {
     e.preventDefault()
-    const timestamp = Date.now();
 
     let chat_input = getById("chat-input")
     let content = chat_input.value
@@ -321,7 +313,6 @@ function sendMessage(e) {
             username: "ERROR",
             content: "Nem küldhetsz üzenetet mert mémítva vagy.",
             timestamp: getCurrentTime()
-
         }
         addMessage(message_to_add)
         chat_input.value = ""
@@ -329,17 +320,17 @@ function sendMessage(e) {
     }
 
     if (content.startsWith("/")) {
-        message_to_send = handleCommands(content, timestamp)
+        message_to_send = handleCommands(content)
     } else {
         message_to_send = {
-            type: "message",
+            type: "public",
             content: content,
             username: current_user.username,
             timestamp: getCurrentTime()
         }
     }
 
-    console.log("[DEBUG]: To send: ", message_to_send)
+    console.log("[DEBUG]: Küldve: ", message_to_send)
     chat_input.value = ""
     if (message_to_send !== null && is_connected) {
         addMessage(message_to_send)
@@ -430,7 +421,7 @@ function connect() {
             updateLeftPanel(data.content);
             updateCurrentUser()
         } else if (data.type === "command_list") {
-            console.warn("Not implemented.")
+            console.log(data.content)
         } else {
             addMessage(data);
         }
