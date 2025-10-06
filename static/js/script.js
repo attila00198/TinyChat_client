@@ -6,9 +6,8 @@
 const RECONNECT_DELAY = 3000; // 3 másodperc
 const MAX_RECONNECT_ATTEMPTS = 3;
 
-// WebSocket will connect to the same origin via the reverse proxy at /ws
-// This keeps client and server under the same origin and avoids CORS issues.
-const WS_PATH = "/ws";
+const HOST = "localhost"
+const PORT = 8765
 
 // State variables
 var ws = null;
@@ -395,10 +394,7 @@ window.onload = () => {
 
 function connect() {
     const username = currentUsername
-    // Use the current page protocol to determine ws/wss
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${protocol}://${window.location.host}${WS_PATH}`;
-    ws = new WebSocket(wsUrl);
+    ws = new WebSocket(`ws://${HOST}:${PORT}`);
 
     ws.onopen = function () {
         is_connected = true;
