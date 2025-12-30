@@ -3,15 +3,17 @@
 ///////////////////////////////
 
 // Constants
-const RECONNECT_DELAY = 3000; // 3 másodperc
-const MAX_RECONNECT_ATTEMPTS = 3;
+const RECONNECT_DELAY = 1000; // 3 másodperc
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 const HOST = "localhost"
 const PORT = 8765
 
 // State variables
 var ws = null;
+var is_ssl_enabled = false
 var is_connected = false
+var is_reconnecting = false;
 var is_sidebar_closed = false
 
 var reconnectAttempts = 0;
@@ -151,14 +153,22 @@ function formatMessage(message) {
 ///////////////////////////////
 
 function reconnectBtn() {
-    return btn("⟲").onClick(reconnect).setId("reconnect-btn").setClass(`${is_connected ? "hidden" : ""}`)
+    return btn("⟲")
+        .onClick(reconnect)
+        .setId("reconnect-btn")
+        .setClass(`${is_connected || is_reconnecting ? "hidden" : ""}`)
 }
 
 function statusIndicator() {
+    let statusText = is_connected ? "Online" : "Offline";
+    if (!is_connected && reconnectAttempts > 0 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        statusText += ` (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`;
+    }
+
     return div(
-        span(`${is_connected ? "Online" : "Offline"}`).setClass(`${is_connected ? "online" : "offline"}`),
+        span(statusText).setClass(`${is_connected ? "online" : "offline"}`),
         reconnectBtn()
-    ).setClass("left-panel-header")
+    ).setClass("left-panel-header");
 }
 
 function userList() {
@@ -394,10 +404,11 @@ window.onload = () => {
 
 function connect() {
     const username = currentUsername
-    ws = new WebSocket(`ws://${HOST}:${PORT}`);
-
+    ws = is_ssl_enabled ? new WebSocket(`wss://${HOST}:${PORT}`) : new WebSocket(`ws://${HOST}:${PORT}`);
     ws.onopen = function () {
         is_connected = true;
+        is_reconnecting = false;
+        reconnectAttempts = 0; // Reset counter on successful connection
 
         message_to_add = {
             type: 'system',
@@ -429,17 +440,9 @@ function connect() {
     }
 
     ws.onclose = function () {
-        is_connected = false
-        addMessage({
-            type: 'error',
-            username: 'Error',
-            content: 'Kapcsolat megszakadt',
-            timestamp: getCurrentTime()
-        })
-        users = []
-        updateLeftPanel()
-        disconnect()
-    }
+        is_connected = false;
+        attemptReconnect();
+    };
 
     ws.onerror = function (error) {
         is_connected = false
@@ -454,11 +457,43 @@ function connect() {
     };
 };
 
-function reconnect() {
-    if (is_connected == false) {
-        connect()
+function attemptReconnect() {
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        is_reconnecting = true;
+        reconnectAttempts++;
+
+        addMessage({
+            type: 'system',
+            username: 'System',
+            content: `Kapcsolat megszakadt. Újracsatlakozás ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`,
+            timestamp: getCurrentTime()
+        });
+
+        // Update UI to show reconnecting status
+        updateLeftPanel(users);
+
+        setTimeout(() => {
+            connect();
+        }, RECONNECT_DELAY);
     } else {
-        return
+        is_reconnecting = false;
+        reconnectAttempts = 0;
+
+        addMessage({
+            type: 'error',
+            username: 'Error',
+            content: 'Kapcsolat megszakadt. Maximum újracsatlakozási kísérletek elérve.',
+            timestamp: getCurrentTime()
+        });
+        users = [];
+        updateLeftPanel();
+    }
+}
+
+function reconnect() {
+    if (!is_connected && !is_reconnecting) {
+        reconnectAttempts = 0; // Reset counter for manual reconnect
+        attemptReconnect();
     }
 }
 
