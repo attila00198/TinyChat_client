@@ -4,7 +4,10 @@ const CONFIG = {
     server: {
         host: "localhost",
         port: 8765,
-        ssl_enabled: false
+        ssl_enabled: true,
+        get protocol() {
+            return this.ssl_enabled ? "wss" : "ws"
+        }
     },
 
     // Reconnection settings

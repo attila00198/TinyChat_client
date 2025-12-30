@@ -81,11 +81,10 @@ function systemMessage(text) {
 function isEmbtyObj(obj) {
     for (var prop in obj) {
         if (Object.hasOwn(obj, prop)) {
-            console.log("Current user: ", obj)
             return false
         }
     }
-    console.log("Current user is embty! ", current_user)
+    console.log("Current user is empty! ", current_user)
     return true
 }
 
@@ -404,7 +403,7 @@ window.onload = () => {
 
 function connect() {
     const username = currentUsername
-    ws = is_ssl_enabled ? new WebSocket(`wss://${HOST}:${PORT}`) : new WebSocket(`ws://${HOST}:${PORT}`);
+    ws = is_ssl_enabled ? new WebSocket(`${CONFIG.server.protocol}://${HOST}:${PORT}`) : new WebSocket(`ws://${HOST}:${PORT}`);
     ws.onopen = function () {
         is_connected = true;
         is_reconnecting = false;
