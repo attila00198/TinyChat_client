@@ -2,20 +2,20 @@
 ////      Variables        ////
 ///////////////////////////////
 
-// Constants
-const RECONNECT_DELAY = 1000; // 3 másodperc
-const MAX_RECONNECT_ATTEMPTS = 5;
-
-const HOST = "localhost"
-const PORT = 8765
+// Server (Host/Port)
+const HOST = CONFIG.server.host;
+const PORT = CONFIG.server.port;
 
 // State variables
 var ws = null;
-var is_ssl_enabled = false
+var is_ssl_enabled = CONFIG.server.ssl_enabled;
 var is_connected = false
 var is_reconnecting = false;
 var is_sidebar_closed = false
 
+// Reconnect config
+const RECONNECT_DELAY = CONFIG.reconnect.delay;
+const MAX_RECONNECT_ATTEMPTS = CONFIG.reconnect.max_attempts;
 var reconnectAttempts = 0;
 
 var current_user = loadUserFromCookie() || {}
