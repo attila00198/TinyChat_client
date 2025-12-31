@@ -1,31 +1,32 @@
-# TerminalChat — Web Client
+# tinyChat — Web Client
 
-This repository is the frontend for the TerminalChat project. TerminalChat is split into two repositories: this client (a static browser-based UI) and a separately managed backend WebSocket server (the server repo hosts the terminal/chat server). They were split to keep frontend and backend concerns separate.
+This repository contains the static browser-based frontend for the tinyChat project. The frontend is a minimal single-page UI that connects to a separate WebSocket backend (not included here).
 
 What this repo contains
-- A minimal static web client (HTML/CSS/JS) that connects to a WebSocket server and provides a chat interface.
-- No backend/server code is included here — run the matching server (separate repo) to provide the WebSocket endpoint.
-- The recommanded backend located at (Not published yet.)
+- A static web client implemented in HTML/CSS/JS that connects to a WebSocket server and provides a basic chat interface.
+- No backend/server code is included — run the matching backend repository to provide the WebSocket endpoint.
 
 Quick start
 
-1) Confirm or change the WebSocket address
+1) Configure the WebSocket connection
 
-Open `static/js/script.js` and you'll find the connection config near the top of the file:
+Open `static/js/config.js` and edit the `CONFIG.server` values to point to your backend. By default:
 
 ```javascript
-const HOST = "localhost"
-const PORT = 8765
+CONFIG.server = {
+	host: "localhost",
+	port: 8765,
+	ssl_enabled: true
+}
 ```
 
-By default the client attempts to connect to ws://localhost:8765. Change those values to point to your server. If your server expects wss (secure WebSocket), edit the `connect()` function in `static/js/script.js` to use `wss://` instead of `ws://` when appropriate.
+The frontend uses the `CONFIG.server.protocol` helper to pick `wss` when `ssl_enabled` is true and `ws` otherwise.
 
 2) Start a static server and open the UI
 
-PowerShell (recommended for Windows):
+PowerShell (Windows) example — run from inside the `chat_client` folder:
 
 ```pwsh
-# from inside the chat_client folder
 # Python 3 built-in static server
 python -m http.server 8000
 
@@ -33,76 +34,74 @@ python -m http.server 8000
 npx http-server . -p 8000
 ```
 
-Then open http://localhost:8000 (or the port you chose) in your browser and sign in with a username.
+Then open http://localhost:8000 (or the port you chose) in your browser.
 
 Project structure
 
-- `index.html` — main UI shell
-- `static/css/style.css` — styles for the chat UI
-- `static/js/script.js` — main client logic (WebSocket connection, DOM helpers)
-- `static/js/domino.js` — included helper utilities
+- `index.html` — main UI shell (loads `static/js/config.js`, `static/js/domino.js`, `static/js/app.js`)
+- `static/css/style.css` — stylesheet for the UI
+- `static/js/config.js` — central client configuration (server host/port, reconnection, feature flags)
+- `static/js/domino.js` — small DOM helper library and utilities used by the UI
+- `static/js/app.js` — main client logic (UI rendering, WebSocket connection, message handling)
 - `README.md` — this file
 
-Client <-> Server protocol (what the client expects)
+Client ↔ Server protocol
 
-The client uses a lightweight JSON message protocol over WebSocket. Observed message types (from `static/js/script.js`) include:
+The client uses a lightweight JSON message protocol over WebSocket. The code in `static/js/app.js` expects and sends messages with these types:
 
-- `join` — client sends to announce a new user. Example sent by client:
-
-```json
-{ "type": "join", "username": "alice", "content": "Csatlakozott", "timestamp": "12:34:56" }
-```
-
-- `message` — a public chat message. Example (client -> server and server -> clients):
+- `join` — sent by the client to announce a user joining. Example:
 
 ```json
-{ "type": "message", "username": "alice", "content": "Hello everyone", "timestamp": "12:35:00" }
+{ "type": "join", "username": "alice", "timestamp": "12:34:56" }
 ```
 
-- `private` — private message between users. Fields used by the client: `from`, `to`, and `content`.
+- `public` — a public chat message (note: the client uses `type: "public"` for normal chats). Example:
 
-Example:
+```json
+{ "type": "public", "username": "alice", "content": "Hello everyone", "timestamp": "12:35:00" }
+```
+
+- `private` — a private message between users. Example:
 
 ```json
 { "type": "private", "from": "alice", "to": "bob", "content": "secret", "timestamp": "12:35:10" }
 ```
 
-- `command` — used when a user sends a slash-command (e.g., `/whisper`, `/login`, `/to`). The client sends the command to the server to be interpreted.
+- `command` — sent when the user enters a slash command (client packages the command as `type: "command"`).
 
-- `user_list` — server -> clients: when the server sends a user list update the client expects a message where `data.type === 'user_list'` and `data.content` is an array of user objects. Each user object looks like:
+- `user_list` — server → clients: updates the client user list. The client expects `data.content` to be an array of user objects like:
 
 ```json
 { "username": "bob", "is_mod": false, "is_timed_out": false }
 ```
 
-- `system` — informational messages displayed by the client (e.g., connection or error messages).
+- `command_list` — an informational list of available commands (the client currently logs this to console).
+
+- `system` / `error` — used for informational or error messages the client will display in the chat area.
 
 Integration notes
-- The client stores a current user in a cookie named `current_user` for quick reconnects.
-- The client expects user objects in the `user_list` message to include `username`, `is_mod` and `is_timed_out`. The `is_mod` flag changes the display badge and `is_timed_out` disables sending messages for that user.
-- Command handling is partially implemented client-side (some commands produce client-side message objects); for production you should handle authoritative command execution server-side and send updated user lists and system messages back to clients.
+- The client stores the current user in a cookie named `current_user` (see `static/js/app.js` cookie helpers).
+- The configuration in `static/js/config.js` contains reconnection settings and feature flags (e.g., `reconnect.max_attempts`, `features.whisper_enabled`).
+- Much of the UI state is managed in `static/js/app.js`. Commands and authoritative operations should be validated and executed server-side for production.
 
 Troubleshooting and common pitfalls
-
-- WebSocket blocked on file://: browsing `index.html` directly from the file system can cause WebSocket issues in some browsers. Run a static server instead.
-- ws vs wss: if you serve the page over HTTPS, use `wss://` for the WebSocket connection.
-- Cross-origin: static assets don't have CORS, but your WebSocket server must accept connections from the client's origin.
+- Do not open `index.html` via `file://` — use a static server to avoid WebSocket restrictions.
+- If you serve the page over HTTPS, set `ssl_enabled: true` in `static/js/config.js` and ensure the backend accepts `wss://`.
+- Cross-origin: your WebSocket backend must accept connections from the client's origin.
 
 Examples of running locally
-
-- Start the backend server (from your server repo) on port 8765 (or change `PORT` in `script.js`).
-- Start the static server (from this repo) and open the page.
+- Start your backend server (from the companion server repo) and point `static/js/config.js` at it.
+- Start a static server (see step 2) and open the page.
 
 Next steps and maintenance ideas
-
-- Add a small configuration UI to let users enter the WebSocket URL without editing source files.
-- Implement reconnection/backoff and more robust state handling on the client (there are TODOs in `static/js/script.js`).
-- Add tests and a simple example server in the companion backend repository to make onboarding easier.
+- Add a small configuration UI so users can enter the WebSocket URL without editing source files.
+- Harden reconnection/backoff and state handling (there are TODO comments in `static/js/app.js`).
+- Add a simple example backend for local testing to make onboarding easier.
 
 Contributing
 
-If you make changes that affect the protocol, please document message shapes in this README and update the companion server repository. Small focused pull requests are preferred.
+If you change the client/server message shapes, update this README and the companion backend repository. Small, focused pull requests are preferred.
 
 License
 
-This project doesn't include a license file yet. If you'd like, I can add an MIT `LICENSE` file.
+This project does not include a license file yet. If you want, I can add an MIT `LICENSE` file.
